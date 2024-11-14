@@ -1,205 +1,146 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
-  <meta charset="utf-8">
-  
-  
-  <title>Hexo</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Hexo">
-<meta property="og:url" content="http://example.com/index.html">
-<meta property="og:site_name" content="Hexo">
-<meta property="og:locale" content="en_US">
-<meta property="article:author" content="John Doe">
-<meta name="twitter:card" content="summary">
-  
-    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
-  
-  
-    <link rel="shortcut icon" href="/favicon.png">
-  
-  
-  
-<link rel="stylesheet" href="/css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>蜜蜂跟随❀</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #87CEEB; /* 天空蓝背景 */
+            overflow: hidden;
+            position: relative;
+            font-size: 24px;
+            cursor: none; /* 隐藏原始鼠标箭头 */
+        }
 
-  
-    
-<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+        .cursor {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1000;
+            font-size: 36px; /* 增加光标大小 */
+        }
 
-  
-  
-<meta name="generator" content="Hexo 7.3.0"></head>
-
+        .bee {
+            position: absolute;
+            width: 30px; /* 蜜蜂宽度 */
+            height: 30px; /* 蜜蜂高度 */
+            background-image: url('/img/2024/11/14/dog.png'); /* 替换为蜜蜂图片 URL */
+            background-size: cover;
+            pointer-events: none;
+            opacity: 0.8;
+        }
+    </style>
+</head>
 <body>
-  <div id="container">
-    <div id="wrap">
-      <header id="header">
-  <div id="banner"></div>
-  <div id="header-outer" class="outer">
-    <div id="header-title" class="inner">
-      <h1 id="logo-wrap">
-        <a href="/" id="logo">Hexo</a>
-      </h1>
-      
-    </div>
-    <div id="header-inner" class="inner">
-      <nav id="main-nav">
-        <a id="main-nav-toggle" class="nav-icon"><span class="fa fa-bars"></span></a>
-        
-          <a class="main-nav-link" href="/">Home</a>
-        
-          <a class="main-nav-link" href="/archives">Archives</a>
-        
-      </nav>
-      <nav id="sub-nav">
-        
-        
-          <a class="nav-icon" href="/atom.xml" title="RSS Feed"><span class="fa fa-rss"></span></a>
-        
-        <a class="nav-icon nav-search-btn" title="Search"><span class="fa fa-search"></span></a>
-      </nav>
-      <div id="search-form-wrap">
-        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
-      </div>
-    </div>
-  </div>
-</header>
+<div class="cursor">❀</div>
+<script>
+    const beeCount = 10;
+    const bees = [];
+    const cohesionFactor = 0.05; // 聚合因子
+    const separationDistance = 80; // 分离距离
+    let mousePosition = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
 
-      <div class="outer">
-        <section id="main">
-  
-    <article id="post-hello-world" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2024/10/30/hello-world/" class="article-date">
-  <time class="dt-published" datetime="2024-10-30T13:50:07.870Z" itemprop="datePublished">2024-10-30</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2024/10/30/hello-world/">Hello World</a>
-    </h1>
-  
+    // 创建蜜蜂元素
+    for (let i = 0; i < beeCount; i++) {
+        const bee = document.createElement('div');
+        bee.className = 'bee';
+        bee.position = {
+            x: Math.random() * window.innerWidth,
+            y: Math.random() * window.innerHeight,
+        };
+        bee.velocity = {
+            x: Math.random() * 2 - 1,
+            y: Math.random() * 2 - 1,
+        };
+        document.body.appendChild(bee);
+        bees.push(bee);
+    }
 
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
+    // 更新蜜蜂位置
+    function updateBees() {
+        bees.forEach((bee, index) => {
+            let cohesionX = 0, cohesionY = 0;
+            let separationX = 0, separationY = 0;
+            let count = 0;
 
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+            bees.forEach((otherBee, otherIndex) => {
+                if (index !== otherIndex) {
+                    const dx = otherBee.position.x - bee.position.x;
+                    const dy = otherBee.position.y - bee.position.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
 
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+                    // 计算聚合
+                    if (distance < separationDistance) {
+                        cohesionX += otherBee.position.x;
+                        cohesionY += otherBee.position.y;
+                        count++;
+                    }
 
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+                    // 计算分离
+                    if (distance < separationDistance) {
+                        separationX -= dx / distance; // 分离向量
+                        separationY -= dy / distance; // 分离向量
+                    }
+                }
+            });
 
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+            // 计算聚合中心
+            if (count > 0) {
+                cohesionX /= count;
+                cohesionY /= count;
+                cohesionX = (cohesionX - bee.position.x) * cohesionFactor;
+                cohesionY = (cohesionY - bee.position.y) * cohesionFactor;
+            }
 
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://example.com/2024/10/30/hello-world/" data-id="cm2vxu9gb0000gcxcbr0s5y92" data-title="Hello World" class="article-share-link"><span class="fa fa-share">Share</span></a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
+            // 跟随鼠标位置
+            const dxMouse = mousePosition.x - bee.position.x;
+            const dyMouse = mousePosition.y - bee.position.y;
+            const distanceToMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
+            const followFactor = 0.05; // 跟随因子
 
+            // 更新蜜蜂的位置
+            bee.velocity.x += separationX + cohesionX + (dxMouse * followFactor) * 0.2; // 添加跟随的影响
+            bee.velocity.y += separationY + cohesionY + (dyMouse * followFactor) * 0.2; // 添加跟随的影响
 
+            // 限制速度
+            const speedLimit = 2;
+            const speed = Math.sqrt(bee.velocity.x * bee.velocity.x + bee.velocity.y * bee.velocity.y);
+            if (speed > speedLimit) {
+                bee.velocity.x = (bee.velocity.x / speed) * speedLimit;
+                bee.velocity.y = (bee.velocity.y / speed) * speedLimit;
+            }
 
-  
+            // 更新位置
+            bee.position.x += bee.velocity.x;
+            bee.position.y += bee.velocity.y;
 
+            // 限制在视口内
+            bee.position.x = Math.max(0, Math.min(window.innerWidth - 30, bee.position.x));
+            bee.position.y = Math.max(0, Math.min(window.innerHeight - 30, bee.position.y));
 
-</section>
-        
-          <aside id="sidebar">
-  
-    
+            // 更新蜜蜂的CSS变换
+            bee.style.transform = `translate(${bee.position.x}px, ${bee.position.y}px)`;
+        });
+    }
 
-  
-    
+    // 鼠标移动事件
+    document.addEventListener('mousemove', (e) => {
+        mousePosition.x = e.clientX;
+        mousePosition.y = e.clientY;
 
-  
-    
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title">Archives</h3>
-    <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/10/">October 2024</a></li></ul>
-    </div>
-  </div>
+        const cursor = document.querySelector('.cursor');
+        cursor.style.left = `${mousePosition.x}px`;
+        cursor.style.top = `${mousePosition.y}px`;
+    });
 
-
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title">Recent Posts</h3>
-    <div class="widget">
-      <ul>
-        
-          <li>
-            <a href="/2024/10/30/hello-world/">Hello World</a>
-          </li>
-        
-      </ul>
-    </div>
-  </div>
-
-  
-</aside>
-        
-      </div>
-      <footer id="footer">
-  
-  <div class="outer">
-    <div id="footer-info" class="inner">
-      
-      &copy; 2024 John Doe<br>
-      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
-    </div>
-  </div>
-</footer>
-
-    </div>
-    <nav id="mobile-nav">
-  
-    <a href="/" class="mobile-nav-link">Home</a>
-  
-    <a href="/archives" class="mobile-nav-link">Archives</a>
-  
-</nav>
-    
-
-
-<script src="/js/jquery-3.6.4.min.js"></script>
-
-
-
-  
-<script src="/fancybox/jquery.fancybox.min.js"></script>
-
-
-
-
-<script src="/js/script.js"></script>
-
-
-
-
-
-  </div>
+    // 动画循环
+    function animate() {
+        updateBees();
+        requestAnimationFrame(animate);
+    }
+    animate();
+</script>
 </body>
 </html>
