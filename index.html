@@ -3,127 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>蜜蜂跟随❀</title>
+    <title>蜜蜂追踪花</title>
     <style>
         body {
             margin: 0;
             height: 100vh;
-            background-color: #87CEEB; /* 天空蓝背景 */
+            background-color: #87CEEB;
             overflow: hidden;
             position: relative;
-            font-size: 24px;
-            cursor: none; /* 隐藏原始鼠标箭头 */
+            cursor: none;
         }
 
         .cursor {
             position: absolute;
             pointer-events: none;
             z-index: 1000;
-            font-size: 36px; /* 增加光标大小 */
+            font-size: 36px;
         }
 
         .bee {
             position: absolute;
-            width: 30px; /* 蜜蜂宽度 */
-            height: 30px; /* 蜜蜂高度 */
-            background-image: url('/img/2024/11/14/dog.png'); /* 替换为蜜蜂图片 URL */
+            width: 30px;
+            height: 30px;
+            background-image: url('/img/2024/11/14/dog.png'); /* 替换为蜜蜂图片 */
             background-size: cover;
             pointer-events: none;
             opacity: 0.8;
+        }
+
+        .food {
+            position: absolute;
+            font-size: 36px;
+            color: #FF1493;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
 <div class="cursor">❀</div>
 <script>
-    const beeCount = 10;
     const bees = [];
-    const cohesionFactor = 0.05; // 聚合因子
-    const separationDistance = 80; // 分离距离
+    const foods = [];
+    const beeCount = 10;
+    const viewRadius = 300; // 感知范围
+    const hungerIncreaseRate = 0.01; // 每帧饥饿值增加速度
+
     let mousePosition = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
 
-    // 创建蜜蜂元素
-    for (let i = 0; i < beeCount; i++) {
-        const bee = document.createElement('div');
-        bee.className = 'bee';
-        bee.position = {
-            x: Math.random() * window.innerWidth,
-            y: Math.random() * window.innerHeight,
-        };
-        bee.velocity = {
-            x: Math.random() * 2 - 1,
-            y: Math.random() * 2 - 1,
-        };
-        document.body.appendChild(bee);
-        bees.push(bee);
-    }
+    class Bee {
+        constructor() {
+            this.element = document.createElement('div');
+            this.element.className = 'bee';
+            document.body.appendChild(this.element);
 
-    // 更新蜜蜂位置
-    function updateBees() {
-        bees.forEach((bee, index) => {
-            let cohesionX = 0, cohesionY = 0;
-            let separationX = 0, separationY = 0;
-            let count = 0;
+            this.position = {
+                x: Math.random() * window.innerWidth,
+                y: Math.random() * window.innerHeight,
+            };
+            this.velocity = { x: 0, y: 0 };
+            this.hunger = 50; // 初始饥饿值（0-100，100表示非常饥饿）
 
-            bees.forEach((otherBee, otherIndex) => {
-                if (index !== otherIndex) {
-                    const dx = otherBee.position.x - bee.position.x;
-                    const dy = otherBee.position.y - bee.position.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
+            this.updateStyle();
+        }
 
-                    // 计算聚合
-                    if (distance < separationDistance) {
-                        cohesionX += otherBee.position.x;
-                        cohesionY += otherBee.position.y;
-                        count++;
-                    }
+        updateStyle() {
+            this.element.style.transform = `translate(${this.position.x}px, ${this.position.y}px)`;
+        }
 
-                    // 计算分离
-                    if (distance < separationDistance) {
-                        separationX -= dx / distance; // 分离向量
-                        separationY -= dy / distance; // 分离向量
-                    }
-                }
-            });
-
-            // 计算聚合中心
-            if (count > 0) {
-                cohesionX /= count;
-                cohesionY /= count;
-                cohesionX = (cohesionX - bee.position.x) * cohesionFactor;
-                cohesionY = (cohesionY - bee.position.y) * cohesionFactor;
-            }
-
-            // 跟随鼠标位置
-            const dxMouse = mousePosition.x - bee.position.x;
-            const dyMouse = mousePosition.y - bee.position.y;
-            const distanceToMouse = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
-            const followFactor = 0.05; // 跟随因子
-
-            // 更新蜜蜂的位置
-            bee.velocity.x += separationX + cohesionX + (dxMouse * followFactor) * 0.2; // 添加跟随的影响
-            bee.velocity.y += separationY + cohesionY + (dyMouse * followFactor) * 0.2; // 添加跟随的影响
+        move() {
+            // 增加饥饿值
+            this.hunger = Math.min(100, this.hunger + hungerIncreaseRate);
 
             // 限制速度
-            const speedLimit = 2;
-            const speed = Math.sqrt(bee.velocity.x * bee.velocity.x + bee.velocity.y * bee.velocity.y);
-            if (speed > speedLimit) {
-                bee.velocity.x = (bee.velocity.x / speed) * speedLimit;
-                bee.velocity.y = (bee.velocity.y / speed) * speedLimit;
+            const maxSpeed = 2 + (this.hunger / 50); // 饥饿值越高速度越快
+            const speed = Math.sqrt(this.velocity.x ** 2 + this.velocity.y ** 2);
+            if (speed > maxSpeed) {
+                this.velocity.x = (this.velocity.x / speed) * maxSpeed;
+                this.velocity.y = (this.velocity.y / speed) * maxSpeed;
             }
 
             // 更新位置
-            bee.position.x += bee.velocity.x;
-            bee.position.y += bee.velocity.y;
+            this.position.x += this.velocity.x;
+            this.position.y += this.velocity.y;
 
-            // 限制在视口内
-            bee.position.x = Math.max(0, Math.min(window.innerWidth - 30, bee.position.x));
-            bee.position.y = Math.max(0, Math.min(window.innerHeight - 30, bee.position.y));
+            // 限制在屏幕范围内
+            this.position.x = Math.max(0, Math.min(window.innerWidth - 30, this.position.x));
+            this.position.y = Math.max(0, Math.min(window.innerHeight - 30, this.position.y));
 
-            // 更新蜜蜂的CSS变换
-            bee.style.transform = `translate(${bee.position.x}px, ${bee.position.y}px)`;
-        });
+            // 更新样式
+            this.updateStyle();
+        }
+
+        eat(food) {
+            // 吃食物后饥饿值下降，速度降低
+            this.hunger = Math.max(0, this.hunger - 30);
+            foods.splice(foods.indexOf(food), 1);
+            document.body.removeChild(food.element);
+        }
     }
+
+    class Food {
+        constructor(x, y) {
+            this.element = document.createElement('div');
+            this.element.className = 'food';
+            this.element.textContent = '❀';
+            document.body.appendChild(this.element);
+
+            this.position = { x, y };
+            this.updateStyle();
+        }
+
+        updateStyle() {
+            this.element.style.transform = `translate(${this.position.x}px, ${this.position.y}px)`;
+        }
+    }
+
+    // 初始化蜜蜂
+    for (let i = 0; i < beeCount; i++) {
+        bees.push(new Bee());
+    }
+
+    // 鼠标点击投放食物
+    document.addEventListener('click', (e) => {
+        const food = new Food(e.clientX, e.clientY);
+        foods.push(food);
+    });
 
     // 鼠标移动事件
     document.addEventListener('mousemove', (e) => {
@@ -137,7 +141,44 @@
 
     // 动画循环
     function animate() {
-        updateBees();
+        bees.forEach((bee) => {
+            let nearestFood = null;
+            let minDistance = Infinity;
+
+            // 查找最接近的食物
+            foods.forEach((food) => {
+                const dx = food.position.x - bee.position.x;
+                const dy = food.position.y - bee.position.y;
+                const distance = Math.sqrt(dx ** 2 + dy ** 2);
+
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    nearestFood = food;
+                }
+            });
+
+            // 蜜蜂行为
+            if (nearestFood) {
+                const dx = nearestFood.position.x - bee.position.x;
+                const dy = nearestFood.position.y - bee.position.y;
+                const distance = Math.sqrt(dx ** 2 + dy ** 2);
+
+                // 追逐食物
+                if (distance > 5) {
+                    bee.velocity.x += (dx / distance) * 0.3;
+                    bee.velocity.y += (dy / distance) * 0.3;
+                } else {
+                    bee.eat(nearestFood);
+                }
+            } else {
+                // 随机运动
+                bee.velocity.x += (Math.random() - 0.5) * 0.2;
+                bee.velocity.y += (Math.random() - 0.5) * 0.2;
+            }
+
+            bee.move();
+        });
+
         requestAnimationFrame(animate);
     }
     animate();
