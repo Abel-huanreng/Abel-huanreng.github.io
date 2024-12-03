@@ -23,12 +23,12 @@
 
         .bee {
             position: absolute;
-            width: 30px;
-            height: 30px;
-            background-image: url('/img/2024/11/14/dog.png'); /* 替换为蜜蜂图片 */
+            background-image: url('/img/2024/11/14/dog.png'); /* 替换为正确的蜜蜂图片 URL */
             background-size: cover;
             pointer-events: none;
             opacity: 0.8;
+            border-radius: 50%;
+            display: block; /* 保证蜜蜂元素显示 */
         }
 
         .food {
@@ -37,6 +37,25 @@
             color: #FF1493;
             pointer-events: none;
         }
+
+        .heart {
+            position: absolute;
+            font-size: 24px;
+            color: red;
+            pointer-events: none;
+            animation: float 1s ease-out forwards;
+        }
+
+        @keyframes float {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+        }
     </style>
 </head>
 <body>
@@ -44,14 +63,15 @@
 <script>
     const bees = [];
     const foods = [];
-    const beeCount = 10;
+    const beeCount = 2; // 初始蜜蜂数量
     const viewRadius = 300; // 感知范围
     const hungerIncreaseRate = 0.01; // 每帧饥饿值增加速度
+    const maxSize = 60; // 最大蜜蜂尺寸
 
     let mousePosition = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
 
     class Bee {
-        constructor() {
+        constructor(size = 30) {
             this.element = document.createElement('div');
             this.element.className = 'bee';
             document.body.appendChild(this.element);
@@ -62,12 +82,16 @@
             };
             this.velocity = { x: 0, y: 0 };
             this.hunger = 50; // 初始饥饿值（0-100，100表示非常饥饿）
+            this.size = size; // 初始尺寸
+            this.foodCount = 0; // 吃掉的花数量
 
             this.updateStyle();
         }
 
         updateStyle() {
             this.element.style.transform = `translate(${this.position.x}px, ${this.position.y}px)`;
+            this.element.style.width = `${this.size}px`;
+            this.element.style.height = `${this.size}px`;
         }
 
         move() {
@@ -87,18 +111,67 @@
             this.position.y += this.velocity.y;
 
             // 限制在屏幕范围内
-            this.position.x = Math.max(0, Math.min(window.innerWidth - 30, this.position.x));
-            this.position.y = Math.max(0, Math.min(window.innerHeight - 30, this.position.y));
+            this.position.x = Math.max(0, Math.min(window.innerWidth - this.size, this.position.x));
+            this.position.y = Math.max(0, Math.min(window.innerHeight - this.size, this.position.y));
 
             // 更新样式
             this.updateStyle();
         }
 
         eat(food) {
-            // 吃食物后饥饿值下降，速度降低
+            // 吃食物后饥饿值下降，速度减慢
             this.hunger = Math.max(0, this.hunger - 30);
             foods.splice(foods.indexOf(food), 1);
             document.body.removeChild(food.element);
+
+            // 增加体积
+            this.size = Math.min(maxSize, this.size + 5);
+            this.foodCount++;
+
+            // 检查繁殖条件
+            this.checkReproduction();
+        }
+
+        checkReproduction() {
+            if (this.foodCount >= 2) {
+                const partner = bees.find(
+                    (bee) => bee !== this && bee.foodCount >= 2
+                );
+
+                if (partner) {
+                    // 触发繁殖动作
+                    this.reproduceWith(partner);
+                }
+            }
+        }
+
+        reproduceWith(partner) {
+            // 创建爱心动画
+            const heart = document.createElement('div');
+            heart.className = 'heart';
+            heart.textContent = '❤';
+            document.body.appendChild(heart);
+
+            // 设置爱心位置为两只蜜蜂中点
+            heart.style.left = `${(this.position.x + partner.position.x) / 2}px`;
+            heart.style.top = `${(this.position.y + partner.position.y) / 2}px`;
+
+            // 动画结束后移除爱心
+            setTimeout(() => {
+                document.body.removeChild(heart);
+            }, 1000);
+
+            // 生成新蜜蜂
+            const newBee = new Bee(30);
+            newBee.position.x = (this.position.x + partner.position.x) / 2;
+            newBee.position.y = (this.position.y + partner.position.y) / 2;
+            bees.push(newBee);
+
+            // 重置父母的吃花数量
+            this.foodCount = 0;
+            partner.foodCount = 0;
+
+            console.log('新蜜蜂出生！当前蜜蜂数量:', bees.length);
         }
     }
 
