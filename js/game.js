@@ -6,7 +6,7 @@ canvas.height = window.innerHeight;
 // 配置类
 class Config {
     static BULLET_A_SPEED = 3; // 子弹A的速度
-    static BULLET_B_SPEED = -5; // 子弹B的速度
+    static BULLET_B_SPEED = -20; // 子弹B的速度
     static BULLET_A_SIZE = { width: 50, height: 60 }; // 子弹A的大小
     static BULLET_B_SIZE = { width: 30, height: 40 }; // 子弹B的大小
     static BULLET_A_IMAGE = '../img/2024/11/14/dog.png'; // 子弹A的图片地址
@@ -17,9 +17,9 @@ class Config {
 
     static BOSS_IMAGE = '../img/2025/2/13/xie.png'; // BOSS的图片地址
     static BOSS_SIZE = { width: 100, height: 100 }; // BOSS的大小
-    static BOSS_MAX_HEALTH = 100; // BOSS的最大血量
+    static BOSS_MAX_HEALTH = 2000; // BOSS的最大血量
     static BOSS_BASE_SPEED = 2; // BOSS的基础移动速度
-    static BOSS_RANDOM_MOVE_RANGE = { x: 10, y: 5 }; // BOSS随机移动范围
+    static BOSS_RANDOM_MOVE_RANGE = { x: 300, y: 20 }; // BOSS随机移动范围
     static BOSS_SPEED_INCREASE_FACTOR = 0.02; // BOSS血量越低，移动速度越快
 }
 
