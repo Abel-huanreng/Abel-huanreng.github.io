@@ -45,6 +45,7 @@
                 <a href="#skills">技能</a>
                 <a href="#stats">数据</a>
                 <a href="#projects">项目</a>
+                <a href="#tank">鱼缸</a>
             </nav>
 
             <div class="top-actions">
@@ -458,7 +459,63 @@
                 </section>
             </div>
         </div>
+
+        <div class="tank-anchor reveal" id="tank">
+            <div class="tank-teaser">
+                <p class="tank-eyebrow">LIVE ECOSYSTEM</p>
+                <h2 id="tankTitle">养一缸会自己生活的鱼</h2>
+                <p class="tank-desc">鱼群用 boids 算法聚散，会觅食、繁殖，也会饿肚子。阳光滋养水草，点击水面撒饵、种下水草，看这套小生态怎么回应你。</p>
+                <button class="btn btn-primary tank-open" id="tankOpen" type="button">
+                    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14Zm0-11a.75.75 0 0 0-.53.22l-2.25 2.25a.75.75 0 1 0 1.06 1.06L7.25 6.56V11a.75.75 0 0 0 1.5 0V6.56l.97.97a.75.75 0 1 0 1.06-1.06L8.53 4.22A.75.75 0 0 0 8 4Z"/></svg>
+                    <span>打开鱼缸</span>
+                </button>
+                <p class="tank-hint">也可以在页面底部上滑打开 · 下滑退出</p>
+            </div>
+        </div>
     </main>
+
+    <div class="tank-drawer" id="tankDrawer">
+        <section class="tank-section" id="tankPanel" aria-labelledby="tankTitle">
+            <div class="tank-close-wrap">
+                <button class="tank-close" id="tankClose" type="button" aria-label="关闭鱼缸">
+                    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"/></svg>
+                    <span>退出鱼缸</span>
+                </button>
+            </div>
+
+            <div class="tank-head">
+                <div class="tank-copy">
+                    <p class="tank-eyebrow">LIVE ECOSYSTEM</p>
+                    <p class="tank-copy-title">生态鱼缸已全屏展开</p>
+                </div>
+                <div class="tank-controls" role="group" aria-label="鱼缸控制">
+                    <button class="tank-btn" id="tankFeed" type="button" aria-pressed="true">投喂</button>
+                    <button class="tank-btn" id="tankPlant" type="button" aria-pressed="false">种水草</button>
+                    <button class="tank-btn" id="tankClean" type="button">清理饵料</button>
+                    <button class="tank-btn" id="tankPause" type="button" aria-pressed="false">暂停</button>
+                </div>
+            </div>
+
+            <div class="tank-stage">
+                <canvas id="tankCanvas" tabindex="0" role="application" aria-label="生态鱼缸：点击水面投放饵料；方向键移动投喂点，空格投喂。">
+                    你的浏览器不支持 canvas，鱼缸无法显示。
+                </canvas>
+                <div class="tank-hud" aria-hidden="true">
+                    <span>鱼群 <b data-tank="fish">18</b></span>
+                    <span>饵料 <b data-tank="food">0</b></span>
+                    <span>水草 <b data-tank="plants">2</b></span>
+                </div>
+                <div class="tank-paused" id="tankPaused" hidden>生态暂停中</div>
+                <p class="tank-tip" id="tankTip">点击水面撒饵 · 水草在阳光下进行光合作用</p>
+                <p class="sr-only" id="tankStatus" role="status" aria-live="polite"></p>
+            </div>
+        </section>
+
+        <div class="tank-handle" id="tankHandle" role="button" tabindex="0" aria-expanded="false" aria-label="上滑打开鱼缸">
+            <span class="tank-handle-bar" aria-hidden="true"></span>
+            <span class="tank-handle-text">上滑打开鱼缸</span>
+        </div>
+    </div>
 
     <footer class="site-footer">
         <p>© <span id="year">2026</span> hejing · 用原生 HTML / CSS / JS 手写</p>
@@ -470,5 +527,6 @@
     </button>
 
     <script src="js/main.js" defer></script>
+    <script src="js/tank.js" defer></script>
 </body>
 </html>

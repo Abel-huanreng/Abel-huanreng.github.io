@@ -74,6 +74,10 @@
             }
         });
 
+        if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+            current = tabTargets[tabTargets.length - 1].id;
+        }
+
         if (current === activeTabId) return;
         activeTabId = current;
         tabTargets.forEach(function (target) {
@@ -132,6 +136,8 @@
             });
             if (themeColorMeta) themeColorMeta.setAttribute("content", themeColors[theme]);
             if (colorSchemeMeta) colorSchemeMeta.setAttribute("content", themeSchemes[theme]);
+
+            document.dispatchEvent(new CustomEvent("themechange", { detail: { theme: theme } }));
 
             if (persist) {
                 try { localStorage.setItem("site-theme-v2", theme); } catch (e) {}
