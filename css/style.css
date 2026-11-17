@@ -577,6 +577,59 @@ ul {
     color: var(--muted);
 }
 
+.theme-panel-sep {
+    height: 1px;
+    margin: 9px 6px;
+    background: var(--border);
+}
+
+.bg-mode {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    padding: 0 2px 5px;
+}
+
+.bg-mode-option {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 6px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.bg-mode-option:hover {
+    background: var(--surface);
+}
+
+.bg-mode-option[aria-pressed="true"] {
+    border-color: color-mix(in srgb, var(--link) 45%, transparent);
+    background: color-mix(in srgb, var(--link) 8%, transparent);
+    color: var(--link);
+}
+
+.bg-mode-dot {
+    width: 8px;
+    height: 8px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bg-mode-option[aria-pressed="true"] .bg-mode-dot {
+    background: var(--link);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--link) 70%, transparent);
+}
+
 /* ============ Layout ============ */
 main {
     display: block;

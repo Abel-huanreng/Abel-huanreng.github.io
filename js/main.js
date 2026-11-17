@@ -187,6 +187,52 @@
         });
     })();
 
+    /* ---------- Background mode switcher ---------- */
+    (function bgSwitcher() {
+        const panel = document.getElementById("themePanel");
+        const toggle = document.getElementById("themeToggle");
+        if (!panel) return;
+
+        const options = Array.prototype.slice.call(panel.querySelectorAll("[data-bg-value]"));
+        if (!options.length) return;
+
+        const STORE_KEY = "site-bg-v1";
+        const MODES = ["aurora", "cellular"];
+
+        function readMode() {
+            try {
+                const saved = localStorage.getItem(STORE_KEY);
+                return MODES.indexOf(saved) !== -1 ? saved : "aurora";
+            } catch (e) {
+                return "aurora";
+            }
+        }
+
+        function applyMode(mode, persist) {
+            if (MODES.indexOf(mode) === -1) return;
+            options.forEach(function (option) {
+                option.setAttribute("aria-pressed", option.getAttribute("data-bg-value") === mode ? "true" : "false");
+            });
+            document.dispatchEvent(new CustomEvent("bgchange", { detail: { mode: mode } }));
+            if (persist) {
+                try {
+                    localStorage.setItem(STORE_KEY, mode);
+                } catch (e) {}
+                if (toggle) toggle.focus();
+                panel.classList.remove("is-open");
+                if (toggle) toggle.setAttribute("aria-expanded", "false");
+            }
+        }
+
+        applyMode(readMode(), false);
+
+        options.forEach(function (option) {
+            option.addEventListener("click", function () {
+                applyMode(option.getAttribute("data-bg-value"), true);
+            });
+        });
+    })();
+
     /* ---------- Live GitHub stats ---------- */
     (function githubStats() {
         const repoStat = document.querySelector('[data-stat="repos"]');

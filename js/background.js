@@ -1,6 +1,7 @@
 /* ============================================================
    Animated theme-aware background
-   - drifting aurora blobs, drifting dust/stars, soft vignette
+   - aurora mode : drifting aurora blobs + dust/stars + vignette
+   - cellular    : flowing 1D Rule 30 cellular automaton
    - reads colors from the active theme's CSS variables
    - respects prefers-reduced-motion
    ============================================================ */
@@ -13,12 +14,29 @@
     const ctx = canvas.getContext("2d");
     const TAU = Math.PI * 2;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const STORE_KEY = "site-bg-v1";
+    const MODES = ["aurora", "cellular"];
 
     let width = 0;
     let height = 0;
     let dpr = 1;
+    let mode = "aurora";
+
     let blobs = [];
     let stars = [];
+
+    const ca = {
+        cell: 8,
+        rowH: 9,
+        cols: 0,
+        rows: 0,
+        buf: [],
+        scroll: 0,
+        speed: 0.16,
+        tick: 0,
+        seedEvery: 40
+    };
+
     let rafId = null;
     let running = false;
     let palette = {
@@ -49,6 +67,10 @@
         return (0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b) / 255;
     }
 
+    function clamp01(value) {
+        return value < 0 ? 0 : value > 1 ? 1 : value;
+    }
+
     function readPalette() {
         const cs = getComputedStyle(document.documentElement);
         const accentTokens = ["--cyan", "--violet", "--pink", "--indigo", "--link"];
@@ -63,7 +85,18 @@
         palette.luminance = luminanceOf(bg);
     }
 
-    function build() {
+    function readMode() {
+        try {
+            const saved = localStorage.getItem(STORE_KEY);
+            return MODES.indexOf(saved) !== -1 ? saved : "aurora";
+        } catch (e) {
+            return "aurora";
+        }
+    }
+
+    /* ---------------- Aurora mode ---------------- */
+
+    function buildAurora() {
         const max = Math.max(width, height);
         blobs = [];
         const blobCount = width < 720 ? 3 : 4;
@@ -99,6 +132,121 @@
         }
     }
 
+    /* ---------------- Cellular (Rule 30) mode ---------------- */
+
+    function nextRow(prev) {
+        const n = prev.length;
+        const out = new Uint8Array(n);
+        for (let i = 0; i < n; i += 1) {
+            const left = prev[(i - 1 + n) % n];
+            const center = prev[i];
+            const right = prev[(i + 1) % n];
+            // Rule 30: left XOR (center OR right)
+            out[i] = (left ^ (center | right)) ? 1 : 0;
+        }
+        return out;
+    }
+
+    function randomRow() {
+        const row = new Uint8Array(ca.cols);
+        const count = Math.max(1, Math.round(ca.cols * 0.05));
+        for (let i = 0; i < count; i += 1) {
+            row[Math.floor(Math.random() * ca.cols)] = 1;
+        }
+        return row;
+    }
+
+    function buildCA() {
+        ca.cell = width < 720 ? 9 : 8;
+        ca.rowH = ca.cell * 1.12;
+        ca.cols = Math.max(12, Math.ceil(width / ca.cell) + 1);
+        ca.rows = Math.max(8, Math.ceil(height / ca.rowH) + 1);
+        ca.seedEvery = Math.max(24, Math.round(ca.rows * 1.2));
+        ca.buf = [];
+        for (let i = 0; i < ca.rows; i += 1) {
+            ca.buf.push(new Uint8Array(ca.cols));
+        }
+        ca.scroll = 0;
+        ca.tick = 0;
+        reseedCA();
+    }
+
+    function reseedCA() {
+        const seed = randomRow();
+        ca.buf[0] = seed;
+        for (let i = 1; i < ca.rows; i += 1) {
+            ca.buf[i] = nextRow(ca.buf[i - 1]);
+        }
+    }
+
+    function stepCA() {
+        if (reducedMotion) return;
+        ca.scroll += ca.speed;
+        if (ca.scroll >= ca.rowH) {
+            ca.scroll -= ca.rowH;
+            const prev = ca.buf[0];
+            ca.tick += 1;
+            const next = ca.tick % ca.seedEvery === 0 ? randomRow() : nextRow(prev);
+            for (let i = ca.rows - 1; i > 0; i -= 1) {
+                ca.buf[i] = ca.buf[i - 1];
+            }
+            ca.buf[0] = next;
+        }
+    }
+
+    function renderCellular() {
+        const dark = palette.luminance < 0.5;
+        const baseAlpha = dark ? 0.85 : 0.5;
+        const cell = ca.cell;
+        const lineW = Math.max(1, cell * 0.6);
+        const baseY = height - ca.rowH;
+
+        ctx.save();
+        ctx.lineCap = "round";
+        ctx.lineWidth = lineW;
+        ctx.globalCompositeOperation = dark ? "lighter" : "source-over";
+
+        for (let i = 0; i < ca.rows; i += 1) {
+            const row = ca.buf[i];
+            if (!row) continue;
+            const y = baseY - i * ca.rowH + ca.scroll;
+            if (y < -ca.rowH || y > height) continue;
+
+            const age = i / ca.rows;
+            const alpha = clamp01(1 - age * 0.85) * baseAlpha;
+            if (alpha <= 0.012) continue;
+
+            const color = palette.accents[Math.floor(age * palette.accents.length) % palette.accents.length];
+            ctx.strokeStyle = rgba(color, alpha);
+
+            ctx.beginPath();
+            let inRun = false;
+            let runStart = 0;
+            for (let j = 0; j < row.length; j += 1) {
+                if (row[j]) {
+                    if (!inRun) {
+                        inRun = true;
+                        runStart = j;
+                    }
+                } else if (inRun) {
+                    ctx.moveTo(runStart * cell, y);
+                    ctx.lineTo(j * cell, y);
+                    inRun = false;
+                }
+            }
+            if (inRun) {
+                ctx.moveTo(runStart * cell, y);
+                ctx.lineTo(row.length * cell, y);
+            }
+            ctx.stroke();
+        }
+        ctx.restore();
+
+        drawVignette();
+    }
+
+    /* ---------------- Shared layers ---------------- */
+
     function rand(min, max) {
         return min + Math.random() * (max - min);
     }
@@ -110,7 +258,8 @@
         canvas.width = Math.round(width * dpr);
         canvas.height = Math.round(height * dpr);
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        build();
+        buildAurora();
+        buildCA();
         if (reducedMotion) render(0);
     }
 
@@ -190,13 +339,24 @@
         ctx.fillRect(0, 0, width, height);
     }
 
-    function render(t) {
-        if (!width || !height) return;
+    function renderAurora(t) {
         ctx.clearRect(0, 0, width, height);
         drawBase();
         drawBlobs(t);
         drawStars(t);
         drawVignette();
+    }
+
+    function render(t) {
+        if (!width || !height) return;
+        if (mode === "cellular") {
+            ctx.clearRect(0, 0, width, height);
+            drawBase();
+            stepCA();
+            renderCellular();
+        } else {
+            renderAurora(t);
+        }
     }
 
     function frame(now) {
@@ -226,11 +386,21 @@
         resizeTimer = window.setTimeout(resize, 120);
     }
 
+    /* ---------------- Init & events ---------------- */
+
+    mode = readMode();
     readPalette();
     resize();
 
     document.addEventListener("themechange", function () {
         readPalette();
+        if (reducedMotion) render(0);
+    });
+
+    document.addEventListener("bgchange", function (event) {
+        const next = event.detail && event.detail.mode;
+        if (MODES.indexOf(next) === -1 || next === mode) return;
+        mode = next;
         if (reducedMotion) render(0);
     });
 
