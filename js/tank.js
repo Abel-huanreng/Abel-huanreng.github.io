@@ -86,6 +86,22 @@
         return value < min ? min : value > max ? max : value;
     }
 
+    function hexToRgb(hex) {
+        let h = String(hex || "").trim().replace(/^#/, "");
+        if (h.length === 3) {
+            h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+        }
+        if (!/^[0-9a-fA-F]{6}$/.test(h)) return null;
+        const num = parseInt(h, 16);
+        return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+    }
+
+    function rgbaFrom(hex, alpha) {
+        const rgb = hexToRgb(hex);
+        if (!rgb) return "rgba(180,220,255," + alpha + ")";
+        return "rgba(" + rgb.r + "," + rgb.g + "," + rgb.b + "," + alpha + ")";
+    }
+
     function readPalette() {
         const styles = getComputedStyle(stage);
         palette = {
@@ -621,9 +637,10 @@
         for (let i = 0; i < 4; i += 1) {
             const x = width * (0.12 + i * 0.25) + Math.sin(elapsed * 0.2 + i * 1.7) * 36;
             const w = width * 0.08;
+            const shimmer = 0.72 + 0.28 * Math.sin(elapsed * 0.5 + i * 1.9);
             const ray = ctx.createLinearGradient(x, 0, x + w, sandY);
-            ray.addColorStop(0, "rgba(" + palette.glow + ", 0.14)");
-            ray.addColorStop(0.55, "rgba(" + palette.glow + ", 0.05)");
+            ray.addColorStop(0, "rgba(" + palette.glow + "," + (0.14 * shimmer).toFixed(3) + ")");
+            ray.addColorStop(0.55, "rgba(" + palette.glow + "," + (0.05 * shimmer).toFixed(3) + ")");
             ray.addColorStop(1, "rgba(" + palette.glow + ", 0)");
             ctx.fillStyle = ray;
             ctx.beginPath();
@@ -635,6 +652,100 @@
             ctx.fill();
         }
         ctx.restore();
+    }
+
+    function drawSurface() {
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        const bands = [
+            { y: 9, amp: 5, freq: 0.02, speed: 1.15, alpha: 0.12, phase: 0 },
+            { y: 24, amp: 6, freq: 0.014, speed: -0.9, alpha: 0.07, phase: 2 }
+        ];
+        bands.forEach(function (band) {
+            ctx.fillStyle = "rgba(" + palette.glow + "," + band.alpha + ")";
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            for (let x = 0; x <= width; x += 12) {
+                const y = band.y
+                    + Math.sin(x * band.freq + elapsed * band.speed + band.phase) * band.amp
+                    + Math.sin(x * band.freq * 0.5 + elapsed * band.speed * 0.4) * band.amp * 0.5;
+                ctx.lineTo(x, y);
+            }
+            ctx.lineTo(width, 0);
+            ctx.closePath();
+            ctx.fill();
+        });
+        ctx.restore();
+    }
+
+    function drawCaustics() {
+        if (!sandY) return;
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        ctx.lineCap = "round";
+
+        for (let i = 0; i < 3; i += 1) {
+            ctx.strokeStyle = "rgba(" + palette.glow + "," + (0.09 + i * 0.035).toFixed(3) + ")";
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            for (let x = 0; x <= width; x += 8) {
+                const y = sandY + 5 + i * 11
+                    + Math.sin(x * 0.021 + elapsed * (0.65 + i * 0.22) + i) * 5
+                    + Math.sin(x * 0.048 + elapsed * 0.9 + i * 1.5) * 2.5;
+                if (x === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+        }
+
+        for (let i = 0; i < 4; i += 1) {
+            const px = width * (0.14 + i * 0.24) + Math.sin(elapsed * 0.3 + i * 1.7) * 34;
+            const py = sandY + 9 + Math.sin(elapsed * 0.45 + i) * 6;
+            const g = ctx.createRadialGradient(px, py, 0, px, py, 64);
+            g.addColorStop(0, "rgba(" + palette.glow + ",0.13)");
+            g.addColorStop(1, "rgba(" + palette.glow + ",0)");
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.arc(px, py, 64, 0, TAU);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    function drawGlass() {
+        ctx.save();
+        const sheen = ctx.createLinearGradient(0, 0, width * 0.55, height);
+        sheen.addColorStop(0, "rgba(255,255,255,0.10)");
+        sheen.addColorStop(0.34, "rgba(255,255,255,0.03)");
+        sheen.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = sheen;
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.globalCompositeOperation = "lighter";
+        ctx.strokeStyle = "rgba(255,255,255,0.07)";
+        ctx.lineWidth = 20;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(-30, height * 0.12);
+        ctx.lineTo(width * 0.32, height);
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(255,255,255,0.12)";
+        ctx.fillRect(0, 0, width, 1.5);
+        ctx.fillStyle = "rgba(255,255,255,0.05)";
+        ctx.fillRect(0, height - 1.5, width, 1.5);
+        ctx.restore();
+    }
+
+    function drawVignette() {
+        const g = ctx.createRadialGradient(
+            width * 0.5, height * 0.46, Math.min(width, height) * 0.18,
+            width * 0.5, height * 0.5, Math.max(width, height) * 0.75
+        );
+        g.addColorStop(0, "rgba(0,0,0,0)");
+        g.addColorStop(1, "rgba(0,0,0,0.3)");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, width, height);
     }
 
     function drawSpecks() {
@@ -749,6 +860,14 @@
         ctx.rotate(angle);
         if (Math.abs(angle) > Math.PI / 2) ctx.scale(1, -1);
 
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        ctx.fillStyle = rgbaFrom(spec.color, 0.1);
+        ctx.beginPath();
+        ctx.arc(0, 0, s * 2.5, 0, TAU);
+        ctx.fill();
+        ctx.restore();
+
         ctx.fillStyle = spec.fin;
         ctx.beginPath();
         ctx.moveTo(-s * 1.15, 0);
@@ -768,6 +887,12 @@
         ctx.fillStyle = spec.color;
         ctx.beginPath();
         ctx.ellipse(0, 0, s * 1.55, s * 0.8, 0, 0, TAU);
+        ctx.fill();
+
+        ctx.globalAlpha = 0.35;
+        ctx.fillStyle = "rgba(255,255,255,0.92)";
+        ctx.beginPath();
+        ctx.ellipse(s * 0.24, -s * 0.3, s * 0.9, s * 0.26, -0.35, 0, TAU);
         ctx.fill();
 
         ctx.globalAlpha = 0.5;
@@ -845,8 +970,10 @@
         if (!width || !height) return;
         ctx.clearRect(0, 0, width, height);
         drawWater();
+        drawSurface();
         drawSpecks();
         drawSand();
+        drawCaustics();
         drawKelp();
         plants.forEach(function (p) {
             drawPlant(p, false);
@@ -855,6 +982,8 @@
         fish.forEach(drawFish);
         drawBubbles();
         drawRipples();
+        drawGlass();
+        drawVignette();
         drawCursor();
     }
 
